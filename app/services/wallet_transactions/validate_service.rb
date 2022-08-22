@@ -36,6 +36,8 @@ module WalletTransactions
         organization_id: args[:organization_id],
       )
 
+      return 'customer_not_found' unless result.current_customer
+
       result.current_wallet = Wallet.find_by(
         id: args[:wallet_id],
         customer_id: result.current_customer.id,

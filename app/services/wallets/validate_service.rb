@@ -8,11 +8,10 @@ module Wallets
     end
 
     def valid?
-      errors = []
-      errors << valid_customer?
-      errors << valid_paid_credits_amount?
-      errors << valid_granted_credits_amount?
-      errors = errors.compact
+      errors = {}
+      errors = errors.merge(valid_customer?)
+      errors = errors.merge(valid_paid_credits_amount?)
+      errors = errors.merge(valid_granted_credits_amount?)
 
       unless errors.empty?
         result.fail!(
@@ -36,19 +35,27 @@ module Wallets
         organization_id: args[:organization_id],
       )
 
-      return 'customer_not_found' unless current_customer
-      return 'wallet_already_exists' if current_customer.wallets.active.exists?
-      return 'no_active_subscription' unless current_customer.subscriptions.active.exists?
+      return { customer: ['customer_not_found'] } unless current_customer
+      return { customer: ['wallet_already_exists'] } if current_customer.wallets.active.exists?
+      return { customer: ['no_active_subscription'] } unless current_customer.subscriptions.active.exists?
+
+      {}
     end
 
     def valid_paid_credits_amount?
-      return 'invalid_paid_credits' unless ::Validators::DecimalAmountService.new(args[:paid_credits]).valid_amount?
+      unless ::Validators::DecimalAmountService.new(args[:paid_credits]).valid_amount?
+        return { paid_credits: ['invalid_paid_credits'] }
+      end
+
+      {}
     end
 
     def valid_granted_credits_amount?
       unless ::Validators::DecimalAmountService.new(args[:granted_credits]).valid_amount?
-        'invalid_granted_credits'
+        return { granted_credits: ['invalid_granted_credits'] }
       end
+
+      {}
     end
   end
 end

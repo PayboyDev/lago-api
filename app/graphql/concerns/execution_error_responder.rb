@@ -34,6 +34,7 @@ module ExecutionErrorResponder
       code: service_result.error_code,
       message: service_result.error,
       details: service_result.error_details,
+      status: service_result.status,
     )
   end
 end

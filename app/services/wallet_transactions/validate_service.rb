@@ -8,8 +8,8 @@ module WalletTransactions
     end
 
     def valid?
-      errors = []
-      errors << valid_wallet?
+      errors = {}
+      errors.merge(valid_wallet?)
       errors << valid_paid_credits_amount?
       errors << valid_granted_credits_amount?
       errors = errors.compact
@@ -36,9 +36,11 @@ module WalletTransactions
         customer_id: args[:customer_id],
       )
 
-      return 'wallet_not_found' unless current_wallet
+      return { wallet_id: ['wallet_not_found'] } unless current_wallet
 
-      'wallet_is_terminated' if current_wallet.terminated?
+      { wallet_id: ['wallet_is_terminated'] } if current_wallet.terminated?
+
+      {}
     end
 
     def valid_paid_credits_amount?

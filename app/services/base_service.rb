@@ -16,7 +16,7 @@ class BaseService
   end
 
   class Result < OpenStruct
-    attr_reader :error, :error_code, :error_details
+    attr_reader :error, :error_code, :error_details, :status
 
     def initialize
       super
@@ -29,11 +29,12 @@ class BaseService
       !failure
     end
 
-    def fail!(code:, message: nil, details: nil)
+    def fail!(code:, message: nil, details: nil, status: nil)
       @failure = true
       @error_code = code
       @error = message || code
       @error_details = details
+      @status = status
 
       # Return self to return result immediately in case of failure:
       # ```

@@ -90,4 +90,28 @@ RSpec.describe Mutations::Wallets::Create, type: :graphql do
       expect_forbidden_error(result)
     end
   end
+
+  context 'with validations errors' do
+    it 'returns a customer not found error' do
+      result = execute_graphql(
+        current_user: membership.user,
+        current_organization: membership.organization,
+        query: mutation,
+        variables: {
+          input: {
+            customerId: '123456',
+            name: 'First Wallet',
+            rateAmount: '1',
+            paidCredits: '0.00',
+            grantedCredits: '0.00',
+            expirationDate: (Time.zone.now + 1.year).to_date,
+          },
+        },
+      )
+
+      result_errors = result['errors'].first
+
+      expect(result_errors['extensions']['details']['customer']).to include('customer_not_found')
+    end
+  end
 end

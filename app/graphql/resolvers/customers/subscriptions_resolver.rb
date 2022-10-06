@@ -12,9 +12,17 @@ module Resolvers
       type Types::Subscriptions::Object, null: false
 
       def resolve(status: nil)
+        statuses = status
         subscriptions = object.subscriptions
-        subscriptions = subscriptions.where(status: status) if status.present?
-        subscriptions.order(created_at: :desc)
+
+        return subscriptions.order(created_at: :desc) if statuses.blank?
+        return subscriptions.where(status: statuses).order(created_at: :desc) unless statuses&.include?('pending')
+
+        statuses -= ['pending']
+
+        return subscriptions.starting_in_the_future.order(created_at: :desc) if statuses.blank?
+
+        subscriptions.where(status: statuses).or(subscriptions.starting_in_the_future).order(created_at: :desc)
       end
     end
   end

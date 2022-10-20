@@ -3328,6 +3328,7 @@ type Organization {
   country: CountryCode
   createdAt: ISO8601DateTime!
   email: String
+  gocardlessPaymentProvider: GocardlessProvider
   id: ID!
   invoiceFooter: String
   legalName: String

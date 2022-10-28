@@ -433,7 +433,8 @@ ActiveRecord::Schema[7.0].define(version: 2022_10_28_124549) do
     t.uuid "payment_provider_customer_id", null: false
     t.bigint "amount_cents", default: 0, null: false
     t.string "amount_currency", null: false
-    t.integer "status", default: 0, null: false
+    t.string "status", null: false
+    t.string "provider_refund_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["credit_note_id"], name: "index_refunds_on_credit_note_id"

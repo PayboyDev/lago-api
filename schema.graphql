@@ -1802,8 +1802,9 @@ enum CreditNoteReasonEnum {
 }
 
 enum CreditNoteRefundStatusEnum {
+  failed
   pending
-  refunded
+  succeeded
 }
 
 enum CurrencyEnum {

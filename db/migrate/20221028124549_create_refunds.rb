@@ -9,7 +9,8 @@ class CreateRefunds < ActiveRecord::Migration[7.0]
       t.references :payment_provider_customer, type: :uuid, null: false, foreign_key: true, index: true
       t.bigint :amount_cents, null: false, default: 0
       t.string :amount_currency, null: false
-      t.integer :status, null: false, default: 0
+      t.string :status, null: false
+      t.string :provider_refund_id, null: false
       t.timestamps
     end
   end

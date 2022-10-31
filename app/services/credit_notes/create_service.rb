@@ -30,11 +30,15 @@ module CreditNotes
 
         credit_note.credit_status = 'available' if credit_note.credited?
         credit_note.refund_status = 'pending' if credit_note.refunded?
+
         credit_note.update!(
           total_amount_cents: credit_note.credit_amount_cents + credit_note.refund_amount_cents,
           balance_amount_cents: credit_note.credit_amount_cents,
         )
       end
+
+      deliver_webhook
+      handle_refund if should_handle_refund?
 
       result
     rescue ActiveRecord::RecordInvalid => e
@@ -70,6 +74,32 @@ module CreditNotes
 
     def valid_item?(item)
       CreditNotes::ValidateItemService.new(result, item: item).valid?
+    end
+
+    def deliver_webhookend
+      SendWebhookJob.perform_later(
+        'credit_note.created',
+        credit_note,
+      )
+    end
+
+    def should_handle_refund?
+      return false unless credit_note.refunded?
+      return false unless credit_note.invoice.succeeded?
+
+      invoice_payment.present?
+    end
+
+    def invoice_payment
+      @invoice_payment ||= credit_note.invoice.payments.order(created_at: :desc).first
+    end
+
+    def handle_refund
+      # TODO
+      case invoice_payment.payment_provider.class
+      when PaymentProviders::StripeProvider
+        CreditNotes::Refunds::StripeService.new(credit_note).create
+      end
     end
   end
 end

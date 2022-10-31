@@ -3,7 +3,7 @@
 module CreditNotes
   module Refunds
     class StripeService < BaseService
-      def initialize(credit_note)
+      def initialize(credit_note = nil)
         @credit_note = credit_note
 
         super
@@ -32,6 +32,25 @@ module CreditNotes
 
         result.refund = refund
         result
+      end
+
+      def update_status(provider_refund_id:, status:)
+        refund = Refund.find_by(provider_refund_id: provider_refund_id)
+        return result.not_found_failure!(resource: 'stripe_refund') unless refund
+
+        result.refund = refund
+        result.credit_note = refund.credit_note
+        return result if refund.credit_note.succeeded?
+
+        refund.update!(status: status)
+        update_credit_note_status(status)
+        track_refund_status_changed(status)
+
+        # TODO: report failure ??
+
+        result
+      rescue ArgumentError
+        result.single_validation_failure!(field: :refund_status, error_code: 'value_is_invalid')
       end
 
       private

@@ -38,6 +38,9 @@ module CreditNotes
         )
       end
 
+      deliver_webhook
+      handle_refund if should_handle_refund?
+
       result
     rescue ActiveRecord::RecordInvalid => e
       result.record_validation_failure!(record: e.record)
@@ -72,6 +75,32 @@ module CreditNotes
 
     def valid_item?(item)
       CreditNotes::ValidateItemService.new(result, item: item).valid?
+    end
+
+    def deliver_webhook
+      SendWebhookJob.perform_later(
+        'credit_note.created',
+        credit_note,
+      )
+    end
+
+    def should_handle_refund?
+      return false unless credit_note.refunded?
+      return false unless credit_note.invoice.succeeded?
+
+      invoice_payment.present?
+    end
+
+    def invoice_payment
+      @invoice_payment ||= credit_note.invoice.payments.order(created_at: :desc).first
+    end
+
+    def handle_refund
+      # TODO: implement refunds on GoCardless
+      case invoice_payment.payment_provider
+      when PaymentProviders::StripeProvider
+        CreditNotes::Refunds::StripeCreateJob.perform_later(credit_note)
+      end
     end
   end
 end

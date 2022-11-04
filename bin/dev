@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo
+echo "*** Starting App Processes defined in Procfile.dev ***"
+echo ""
+overmind start -f Procfile.dev
